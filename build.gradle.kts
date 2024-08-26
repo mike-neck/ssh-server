@@ -11,10 +11,10 @@ repositories {
 }
 
 dependencies {
-    implementation("com.github.mwiede:jsch:0.2.19")
     implementation("org.apache.sshd:sshd-core:2.13.2")
     implementation("org.apache.sshd:sshd-common:2.13.2")
     implementation("org.apache.sshd:sshd-sftp:2.13.2")
+    implementation("net.i2p.crypto:eddsa:0.3.0") // <- ed25519 will
 
     runtimeOnly("ch.qos.logback:logback-classic:1.5.7")
     runtimeOnly("net.logstash.logback:logstash-logback-encoder:8.0")
