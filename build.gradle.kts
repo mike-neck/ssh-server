@@ -1,3 +1,5 @@
+import java.nio.file.Files
+
 plugins {
     id("java")
     id("application")
@@ -41,5 +43,76 @@ tasks {
             "SSH_AUTHORIZED_KEYS" to "${buildDir}/ssh-keys/server/authorized_keys",
             "SSH_USERNAME" to "user",
         )
+    }
+
+    create("ssh-keygen") {
+        group = "ssh-keygen"
+        description = "Generates ssh keys(client/server)"
+        dependsOn("client.ssh-keygen", "server.ssh-keygen")
+    }
+
+    create("prepare.ssh-keygen") {
+        group = "ssh-keygen"
+        description = "Prepares ssh directory for the key generation"
+        val directories = listOf(
+            layout.buildDirectory.dir("ssh-keys/etc/ssh"),
+            layout.buildDirectory.dir("ssh-keys/user"),
+            layout.buildDirectory.dir("ssh-keys/server"),
+        )
+        outputs.dirs(directories)
+        doLast {
+            directories.forEach {
+                val dir = it.get().asFile.toPath()
+                Files.createDirectories(dir)
+            }
+        }
+    }
+
+    val clientPublicKey = layout.buildDirectory.file("ssh-keys/user/ssh-key.pub")
+
+    create("client.ssh-keygen", Exec::class) {
+        group = "ssh-keygen"
+        description = "Generates ssh keys(private/public) using ed25519 algorithm"
+        dependsOn("prepare.ssh-keygen")
+        outputs.files(layout.buildDirectory.file("ssh-keys/user/ssh-key"))
+        outputs.files(clientPublicKey)
+        commandLine = listOf(
+            "ssh-keygen",
+            "-b",
+            "4096",
+            "-t",
+            "ed25519",
+            "-f",
+            "${buildDir}/ssh-keys/user/ssh-key",
+            "-N",
+            "",
+        )
+    }
+
+    create("server.ssh-keygen", Exec::class) {
+        group = "ssh-keygen"
+        description = "Generates ssh keys(server host keys)"
+        dependsOn("prepare.ssh-keygen")
+        finalizedBy("authorized_keys")
+        val keyFiles = objects.fileTree().from(layout.buildDirectory.dir("ssh-keys/etc/ssh"))
+        outputs.files(keyFiles)
+        commandLine = listOf(
+            "ssh-keygen",
+            "-A",
+            "-b",
+            "4096",
+            "-f",
+            "${buildDir}/ssh-keys",
+        )
+    }
+
+    create("authorized_keys", Copy::class) {
+        group = "ssh-keygen"
+        description = "Copies client ssh public key to the server authorized_keys"
+        dependsOn("client.ssh-keygen")
+
+        from(clientPublicKey)
+        into("${buildDir}/ssh-keys/server")
+        rename { "authorized_keys" }
     }
 }
