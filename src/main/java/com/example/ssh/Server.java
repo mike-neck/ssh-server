@@ -12,6 +12,7 @@ import org.apache.sshd.common.util.threads.CloseableExecutorService;
 import org.apache.sshd.common.util.threads.SshThreadPoolExecutor;
 import org.apache.sshd.server.SshServer;
 import org.apache.sshd.server.shell.InteractiveProcessShellFactory;
+import org.apache.sshd.server.shell.ProcessShellCommandFactory;
 import org.apache.sshd.server.shell.ProcessShellFactory;
 import org.apache.sshd.server.subsystem.SubsystemFactory;
 import org.apache.sshd.sftp.server.SftpSubsystemFactory;
@@ -40,6 +41,7 @@ public class Server implements AutoCloseable {
         sshServer.setPublickeyAuthenticator(pubKeys);
         sshServer.setShellFactory(new InteractiveProcessShellFactory());
         sshServer.setKeyPairProvider(sshHostKey);
+        sshServer.setCommandFactory(ProcessShellCommandFactory.INSTANCE);
         sshServer.setSubsystemFactories(List.of(sftpServer(exec)));
         sshServer.setIoServiceFactoryFactory(new Nio2ServiceFactoryFactory(() -> ioExec));
     }
