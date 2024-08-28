@@ -45,6 +45,10 @@ tasks {
         )
     }
 
+    distTar.configure {
+        this.archiveFileName = "${project.name}.tar"
+    }
+
     create("ssh-keygen") {
         group = "ssh-keygen"
         description = "Generates ssh keys(client/server)"
