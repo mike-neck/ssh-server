@@ -19,3 +19,4 @@ test-options:
 build:
 	@./gradlew distTar
 	@docker buildx build --platform "$(platformName)" -t "$(imageName):$(newTagVersion)" .
+	@echo docker push "$(imageName):$(newTagVersion)"
