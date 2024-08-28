@@ -1,9 +1,5 @@
 package com.example.ssh;
 
-import java.util.List;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.TimeUnit;
 import org.apache.sshd.common.io.nio2.Nio2ServiceFactoryFactory;
 import org.apache.sshd.common.util.security.SecurityUtils;
 import org.apache.sshd.common.util.security.bouncycastle.BouncyCastleSecurityProviderRegistrar;
@@ -13,12 +9,16 @@ import org.apache.sshd.common.util.threads.SshThreadPoolExecutor;
 import org.apache.sshd.server.SshServer;
 import org.apache.sshd.server.shell.InteractiveProcessShellFactory;
 import org.apache.sshd.server.shell.ProcessShellCommandFactory;
-import org.apache.sshd.server.shell.ProcessShellFactory;
 import org.apache.sshd.server.subsystem.SubsystemFactory;
 import org.apache.sshd.sftp.server.SftpSubsystemFactory;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
 
 public class Server implements AutoCloseable {
 
@@ -44,6 +44,7 @@ public class Server implements AutoCloseable {
         sshServer.setCommandFactory(ProcessShellCommandFactory.INSTANCE);
         sshServer.setSubsystemFactories(List.of(sftpServer(exec)));
         sshServer.setIoServiceFactoryFactory(new Nio2ServiceFactoryFactory(() -> ioExec));
+        sshServer.addSessionListener(new SessionStartEndListener());
     }
 
     public static void main(String[] args) throws Exception {
