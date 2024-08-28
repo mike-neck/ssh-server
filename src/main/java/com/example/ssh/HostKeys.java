@@ -1,12 +1,5 @@
 package com.example.ssh;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.security.GeneralSecurityException;
-import java.security.KeyPair;
-import java.util.Iterator;
-import java.util.List;
 import org.apache.sshd.common.keyprovider.FileKeyPairProvider;
 import org.apache.sshd.common.keyprovider.KeyPairProvider;
 import org.apache.sshd.common.session.SessionContext;
@@ -14,6 +7,12 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.security.KeyPair;
+import java.util.Iterator;
+import java.util.List;
 
 public record HostKeys(
         @NotNull Path ed25519
@@ -29,11 +28,11 @@ public record HostKeys(
     public static @Nullable HostKeys get(@NotNull String hostKeyEnvName) {
         Path byEnv = Env.getPath(hostKeyEnvName);
         if (byEnv != null && Files.exists(byEnv)) {
-            logger.info("[host-key] using {} as host key", byEnv);
+            logger.debug("[host-key] using {} as host key", byEnv);
             return new HostKeys(byEnv);
         }
         if (Files.exists(DEFAULT_SSH_HOST_KEY_PATH)) {
-            logger.info("[host-key] using {} as host key", DEFAULT_SSH_HOST_KEY_PATH);
+            logger.debug("[host-key] using {} as host key", DEFAULT_SSH_HOST_KEY_PATH);
             return new HostKeys(DEFAULT_SSH_HOST_KEY_PATH);
         }
         logger.warn("[host-key] no host key found");
@@ -49,13 +48,13 @@ public record HostKeys(
             @Override
             public boolean hasNext() {
                 boolean hasNext = iterator.hasNext();
-                logger.info("checking(hasNext={}) host key[ed25519: {}] for session: {}, user: {}, kex: {}, proposal: {}", hasNext, ed25519, session.getSessionId(), session.getUsername(), session.getKexState(), session.getKexNegotiationResult().keySet());
+                logger.debug("checking(hasNext={}) host key[ed25519: {}] for session: {}, user: {}, kex: {}, proposal: {}", hasNext, ed25519, session.getSessionId(), session.getUsername(), session.getKexState(), session.getKexNegotiationResult().keySet());
                 return hasNext;
             }
 
             @Override
             public KeyPair next() {
-                logger.info("using host key[ed25519: {}] for session: {}, user: {}, kex: {}, proposal: {}", ed25519, session.getSessionId(), session.getUsername(), session.getKexState(), session.getKexNegotiationResult().keySet());
+                logger.debug("using host key[ed25519: {}] for session: {}, user: {}, kex: {}, proposal: {}", ed25519, session.getSessionId(), session.getUsername(), session.getKexState(), session.getKexNegotiationResult().keySet());
                 return iterator.next();
             }
         };
