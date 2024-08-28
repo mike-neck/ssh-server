@@ -1,5 +1,6 @@
 package com.example.ssh;
 
+import org.apache.sshd.common.io.IoSession;
 import org.apache.sshd.common.io.nio2.Nio2ServiceFactoryFactory;
 import org.apache.sshd.common.util.security.SecurityUtils;
 import org.apache.sshd.common.util.security.bouncycastle.BouncyCastleSecurityProviderRegistrar;
@@ -7,8 +8,11 @@ import org.apache.sshd.common.util.security.eddsa.EdDSASecurityProviderRegistrar
 import org.apache.sshd.common.util.threads.CloseableExecutorService;
 import org.apache.sshd.common.util.threads.SshThreadPoolExecutor;
 import org.apache.sshd.server.SshServer;
+import org.apache.sshd.server.session.SessionFactory;
 import org.apache.sshd.server.shell.InteractiveProcessShellFactory;
 import org.apache.sshd.server.shell.ProcessShellCommandFactory;
+import org.apache.sshd.server.shell.ProcessShellFactory;
+import org.apache.sshd.server.shell.UnknownCommandFactory;
 import org.apache.sshd.server.subsystem.SubsystemFactory;
 import org.apache.sshd.sftp.server.SftpSubsystemFactory;
 import org.jetbrains.annotations.NotNull;
@@ -39,12 +43,14 @@ public class Server implements AutoCloseable {
         sshServer.setPort(sshPort);
         PubKey.Collection pubKeys = PubKey.collection(Server.SSH_USERNAME, Server.SSH_AUTHORIZED_KEYS);
         sshServer.setPublickeyAuthenticator(pubKeys);
-        sshServer.setShellFactory(new InteractiveProcessShellFactory());
+        sshServer.setShellFactory(new ProcessShellFactory("/usr/bin/bash", "-i", "-l"));
         sshServer.setKeyPairProvider(sshHostKey);
-        sshServer.setCommandFactory(ProcessShellCommandFactory.INSTANCE);
+        sshServer.setCommandFactory(new CompositeCommandFactory(ProcessShellCommandFactory.INSTANCE, UnknownCommandFactory.INSTANCE));
         sshServer.setSubsystemFactories(List.of(sftpServer(exec)));
         sshServer.setIoServiceFactoryFactory(new Nio2ServiceFactoryFactory(() -> ioExec));
         sshServer.addSessionListener(new SessionStartEndListener());
+        sshServer.addChannelListener(new Listener());
+        sshServer.setSessionFactory(new SshSessions(sshServer));
     }
 
     public static void main(String[] args) throws Exception {

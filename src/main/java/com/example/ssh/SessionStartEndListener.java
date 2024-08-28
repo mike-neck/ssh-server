@@ -22,6 +22,15 @@ public class SessionStartEndListener implements SessionListener {
 
     @Override
     public void sessionDisconnect(@NotNull Session session, int reason, String msg, String language, boolean initiator) {
-        logger.info("[disconnect] user: {} remote: {}", session.getUsername(), session.getRemoteAddress());
+        logger.info("[disconnect] user: {} remote: {} reason: {}, language: {}, message: {} by initiator: {}", session.getUsername(), session.getRemoteAddress(), reason, language, msg, initiator);
+    }
+
+    @Override
+    public void sessionClosed(Session session) {
+        logger.info("[closed] status: {}, user: {} remote: {}",
+                session.getKexState(),
+                session.getUsername(),
+                session.getRemoteAddress()
+        );
     }
 }
